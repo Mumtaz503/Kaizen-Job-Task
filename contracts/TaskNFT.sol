@@ -3,27 +3,35 @@
 import "erc721a/contracts/ERC721A.sol";
 import "./TaskToken.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ERC1155Task.sol";
 
 pragma solidity ^0.8.18;
 
 error TaskNFT__SendSomeTokens();
 error TaskNFT__NotEnoughBalance();
 error TaskNFT__AllowanceExceeded();
+error TaskNFT__NotOwner();
 
 contract TaskNFT is ERC721A, Ownable {
-    string public constant TOKEN_URI =
-        "ipfs://bafybeig37ioir76s7mg5oobetncojcm3c3hxasyd4rvid4jqhy4gkaheg4/?filename=0-PUG.json";
+    string private s_tokenUri;
 
     string private s_imageURI;
 
     TaskToken private s_taskToken;
+    ERC1155Task private s_erc1155Task;
 
     uint256 private immutable i_pricePerNft;
 
     event NftsMintedAmount(uint256 indexed amountMinted, address mintedTo);
+    event NftsBurned(
+        uint256 indexed tokenId,
+        uint256 amountMinted,
+        address burnedBy
+    );
 
-    constructor(uint256 _pricePerNft) ERC721A("Task NFT Token", "TSKN") {
+    constructor(uint256 _pricePerNft, string memory _uri) ERC721A("Task NFT Token", "TSKN") {
         i_pricePerNft = _pricePerNft;
+        s_tokenUri = _uri;
     }
 
     function mint(uint256 _amountToMint) external {
@@ -62,16 +70,30 @@ contract TaskNFT is ERC721A, Ownable {
         );
     }
 
+    /* Burns one token of tokenId: _tokenId */
+    function burnNft(uint256 _tokenId) external {
+        require(_exists(_tokenId), "Token Doesn't exist");
+
+        if (ownerOf(_tokenId) != msg.sender) {
+            revert TaskNFT__NotOwner();
+        }
+
+        _burn(_tokenId);
+        s_erc1155Task.mint(msg.sender, 0, 100);
+
+        emit NftsBurned(_tokenId, 100, msg.sender);
+    }
+
     /* Helper functions */
-    function _baseURI() internal pure override returns (string memory) {
-        return TOKEN_URI;
+    function _baseURI() internal view override returns (string memory) {
+        return s_tokenUri;
     }
 
     function getPricePerNft() public view returns (uint256) {
         return i_pricePerNft;
     }
 
-    function getTokenURI() public pure returns (string memory) {
-        return TOKEN_URI;
+    function getTokenURI() public view returns (string memory) {
+        return s_tokenUri;
     }
 }

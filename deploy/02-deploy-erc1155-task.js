@@ -1,5 +1,5 @@
 const {network} = require("hardhat");
-const {developmentChains, pricePerNFT, tokenURI} = require("../helper-hardhat-config");
+const {developmentChains, tokenURI} = require("../helper-hardhat-config");
 const {verify} = require("../utils/verification");
 
 module.exports = async ({getNamedAccounts, deployments}) => {
@@ -7,12 +7,12 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const {deployer} = await getNamedAccounts();
 
     log("--------------------------------------------------------------");
-    log("Deploying Task NFT please wait...")
+    log("Deploying ERC1155Task please wait...");
 
-    const arguments = [pricePerNFT, tokenURI];
+    const arguments = [tokenURI];
 
-    const taskNft = await deploy("TaskNFT", {
-        contract: "TaskNFT",
+    const erc1155Task = await deploy("ERC1155Task", {
+        contract: "ERC1155Task",
         from: deployer,
         log: true,
         args: arguments,
@@ -20,12 +20,13 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     });
 
     if(!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
-        log("verifying contract please wait...")
-        await verify(taskNft.address, arguments);
+        log("verifying contract please wait");
+        await verify(erc1155Task.address, arguments);
+        log("Contract successfully verified");
     }
 
     log("--------------------------------------------------------------");
 
 }
 
-module.exports.tags = ["all", "ERC721A"];
+module.exports.tags = ["all", "ERC1155"];
