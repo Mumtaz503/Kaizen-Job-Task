@@ -10,8 +10,9 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     log("Deploying Task NFT please wait...")
 
     const tokenAddress = await ethers.getContract("TaskToken");
+    const erc1155Task = await ethers.getContract("ERC1155Task");
 
-    const arguments = [pricePerNFT, tokenURI, tokenAddress.target];
+    const arguments = [pricePerNFT, tokenURI, tokenAddress.target, erc1155Task.target];
 
     const taskNft = await deploy("TaskNFT", {
         contract: "TaskNFT",

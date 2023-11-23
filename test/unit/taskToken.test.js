@@ -56,9 +56,9 @@ const { getNamedAccounts, ethers, deployments } = require("hardhat");
                 await taskToken.buyTaskToken(amountToBuy, {value: valueToSend});
                 const startingContractBalance = await ethers.provider.getBalance(taskToken.getAddress());
 
-                const txResponse = await taskToken.withdrawETH();
-                const txReceipt = await txResponse.wait(1);
-                const {gasUsed, effectiveGasPrice} = txReceipt;
+                const transactionResponse = await taskToken.withdrawETH();
+                const transactionReceipt = await transactionResponse.wait(1);
+                const {gasUsed, effectiveGasPrice} = transactionReceipt;
                 const gasUsedBigInt = BigInt(gasUsed);
                 const effectiveGasPriceBigInt = BigInt(effectiveGasPrice);
                 const gasCost = gasUsedBigInt * effectiveGasPriceBigInt;

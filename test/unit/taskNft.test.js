@@ -63,10 +63,15 @@ const { getNamedAccounts, ethers, deployments } = require("hardhat");
             });
 
             it("Should revert if token Id doesn't exist", async () => {
-                const tx = await nftToken.burnNft(1);
-                await tx.wait(1);
+                await expect(nftToken.burnNft(7)).to.be.revertedWith("Token Doesn't exist");
+            });
 
-                console.log(tx.toString());
+            it("Should mint ERC1155 against msg.sender", async () => {
+                await nftToken.burnNft(1);
+                const erc1155TokenId = await erc1155Task.getTokens();
+                const deployerErc1155Balance = await erc1155Task.balanceOf(deployer, erc1155TokenId);
+                expect (deployerErc1155Balance).to.exist;
+                console.log(deployerErc1155Balance.toString());
             });
         });
     });

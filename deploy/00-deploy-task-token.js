@@ -17,7 +17,7 @@ module.exports = async function({getNamedAccounts, deployments}) {
         from: deployer,
         args: constructorArgument,
         log: true,
-        waitConfirmations: 1,
+        waitConfirmations: network.config.blockConfirmations || 1,
     });
 
     log(`Task Token successfully deployed at ${taskToken.address}`);

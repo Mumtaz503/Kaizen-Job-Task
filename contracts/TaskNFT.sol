@@ -36,11 +36,13 @@ contract TaskNFT is ERC721A, Ownable {
     constructor(
         uint256 _pricePerNft,
         string memory _uri,
-        address _taskTokenAddress
+        address _taskTokenAddress,
+        address _erc1155Task
     ) ERC721A("Task NFT Token", "TSKN") {
         i_pricePerNft = _pricePerNft;
         s_tokenUri = _uri;
         s_taskToken = IERC20(_taskTokenAddress);
+        s_erc1155Task = ERC1155Task(_erc1155Task);
     }
 
     function mint(uint256 _amountToMint) external {
@@ -85,7 +87,7 @@ contract TaskNFT is ERC721A, Ownable {
         uint256 erc1155TokenId = s_erc1155Task.getTokens();
 
         _burn(_tokenId);
-        s_erc1155Task.mint(address(this), erc1155TokenId, 100);
+        s_erc1155Task.mint(msg.sender, erc1155TokenId, 100);
         s_addressToBurnedNfts[msg.sender] += _tokenId;
 
         emit NftsBurned(_tokenId, 100, msg.sender);
