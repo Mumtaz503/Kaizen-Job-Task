@@ -4,6 +4,7 @@ import "erc721a/contracts/ERC721A.sol";
 import "./TaskToken.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC1155Task.sol";
+import "hardhat/console.sol";
 
 pragma solidity ^0.8.18;
 
@@ -14,8 +15,9 @@ error TaskNFT__NotOwner();
 
 contract TaskNFT is ERC721A, Ownable {
     string private s_tokenUri;
-
     string private s_imageURI;
+    uint256 private constant MAX_MINTS = 5;
+    uint256 private constant TOTAL_SUPPLY = 100;
 
     TaskToken private s_taskToken;
     ERC1155Task private s_erc1155Task;
@@ -29,29 +31,41 @@ contract TaskNFT is ERC721A, Ownable {
         address burnedBy
     );
 
-    constructor(uint256 _pricePerNft, string memory _uri) ERC721A("Task NFT Token", "TSKN") {
+    constructor(
+        uint256 _pricePerNft,
+        string memory _uri
+    ) ERC721A("Task NFT Token", "TSKN") {
         i_pricePerNft = _pricePerNft;
         s_tokenUri = _uri;
     }
 
     function mint(uint256 _amountToMint) external {
+        //console log statement
+        console.log("working");
+
         if (_amountToMint == 0) {
             revert TaskNFT__SendSomeTokens();
         }
 
         uint256 paymentInERC20 = _amountToMint * i_pricePerNft;
 
-        if (
-            s_taskToken.allowance(msg.sender, address(this)) >= paymentInERC20
-        ) {
+        if (s_taskToken.allowance(msg.sender, address(this)) < paymentInERC20) {
             revert TaskNFT__AllowanceExceeded();
         }
 
         if (s_taskToken.balanceOf(msg.sender) < paymentInERC20) {
             revert TaskNFT__NotEnoughBalance();
         } else {
+            require(
+                _amountToMint + _numberMinted(msg.sender) <= MAX_MINTS,
+                "You cannot mint more"
+            );
+            require(
+                totalSupply() + _amountToMint <= TOTAL_SUPPLY,
+                "Limit Reached"
+            );
             s_taskToken.transferFrom(msg.sender, address(this), paymentInERC20);
-            _safeMint(msg.sender, _amountToMint);
+            _mint(msg.sender, _amountToMint);
             emit NftsMintedAmount(_amountToMint, msg.sender);
         }
     }

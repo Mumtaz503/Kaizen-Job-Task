@@ -26,7 +26,7 @@ contract TaskToken is ERC20, Ownable, ReentrancyGuard {
 
         uint256 payment = _amountToBuy * i_pricePerETH;
 
-        if (msg.value < payment) {
+        if (msg.value != payment) {
             revert TaskToken__NotEnoughEthSent();
         }
 
