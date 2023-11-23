@@ -9,7 +9,7 @@ const networkConfig = {
 }
 
 
-const pricePerETH = "300000";
+const pricePerETH = "4900000000000000";  //Price of 1 token in wei
 const developmentChains = ["hardhat", "localhost"];
 const pricePerNFT = "100";
 

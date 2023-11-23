@@ -2,6 +2,7 @@
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 pragma solidity ^0.8.18;
 
@@ -10,7 +11,7 @@ error TaskToken__NotEnoughEthSent();
 error TaskToken__NotEnoughBalance();
 error TaskToken__IssueWithTransfer();
 
-contract TaskToken is ERC20, Ownable {
+contract TaskToken is ERC20, Ownable, ReentrancyGuard {
     uint256 private immutable i_pricePerETH;
 
     event TokensBought(uint256 indexed amountBought);
@@ -33,10 +34,11 @@ contract TaskToken is ERC20, Ownable {
         emit TokensBought(_amountToBuy);
     }
 
-    function withdrawETH() public onlyOwner {
-        if (address(this).balance == 0) {
-            revert TaskToken__NotEnoughBalance();
-        }
+    function withdrawETH() public onlyOwner nonReentrant {
+        require(
+            address(this).balance > 0,
+            "The contract doesn't have enough balance"
+        );
 
         (bool success, ) = owner().call{value: address(this).balance}("");
 
