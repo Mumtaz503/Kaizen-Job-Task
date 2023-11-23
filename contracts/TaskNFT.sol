@@ -5,6 +5,7 @@ import "./TaskToken.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC1155Task.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 pragma solidity ^0.8.18;
 
@@ -14,12 +15,11 @@ error TaskNFT__AllowanceExceeded();
 error TaskNFT__NotOwner();
 
 contract TaskNFT is ERC721A, Ownable {
+    IERC20 private s_taskToken;
+
     string private s_tokenUri;
     string private s_imageURI;
-    uint256 private constant MAX_MINTS = 5;
-    uint256 private constant TOTAL_SUPPLY = 100;
 
-    TaskToken private s_taskToken;
     ERC1155Task private s_erc1155Task;
 
     uint256 private immutable i_pricePerNft;
@@ -31,17 +31,22 @@ contract TaskNFT is ERC721A, Ownable {
         address burnedBy
     );
 
+    mapping(address => uint256) private s_addressToBurnedNfts;
+
     constructor(
         uint256 _pricePerNft,
-        string memory _uri
+        string memory _uri,
+        address _taskTokenAddress
     ) ERC721A("Task NFT Token", "TSKN") {
         i_pricePerNft = _pricePerNft;
         s_tokenUri = _uri;
+        s_taskToken = IERC20(_taskTokenAddress);
     }
 
     function mint(uint256 _amountToMint) external {
-        //console log statement
-        console.log("working");
+        require(_amountToMint > 0, "Enter valid amount");
+
+        // console.log("Working");
 
         if (_amountToMint == 0) {
             revert TaskNFT__SendSomeTokens();
@@ -56,32 +61,17 @@ contract TaskNFT is ERC721A, Ownable {
         if (s_taskToken.balanceOf(msg.sender) < paymentInERC20) {
             revert TaskNFT__NotEnoughBalance();
         } else {
-            require(
-                _amountToMint + _numberMinted(msg.sender) <= MAX_MINTS,
-                "You cannot mint more"
-            );
-            require(
-                totalSupply() + _amountToMint <= TOTAL_SUPPLY,
-                "Limit Reached"
-            );
             s_taskToken.transferFrom(msg.sender, address(this), paymentInERC20);
-            _mint(msg.sender, _amountToMint);
+            _safeMint(msg.sender, _amountToMint, "");
             emit NftsMintedAmount(_amountToMint, msg.sender);
         }
     }
 
     function withdrawTokens() public onlyOwner {
-        require(
-            s_taskToken.balanceOf(address(this)) > 0,
-            "No tokens in contract"
-        );
+        uint256 contractBalance = s_taskToken.balanceOf(address(this));
+        require(contractBalance > 0, "No tokens in contract");
 
-        s_taskToken.approve(address(this), balanceOf(address(this)));
-        s_taskToken.transferFrom(
-            address(this),
-            msg.sender,
-            balanceOf(address(this))
-        );
+        require(s_taskToken.transfer(owner(), contractBalance));
     }
 
     /* Burns one token of tokenId: _tokenId */
@@ -93,7 +83,8 @@ contract TaskNFT is ERC721A, Ownable {
         }
 
         _burn(_tokenId);
-        s_erc1155Task.mint(msg.sender, 0, 100);
+        s_erc1155Task.mint(address(this), 0, 100);
+        s_addressToBurnedNfts[msg.sender] += _tokenId;
 
         emit NftsBurned(_tokenId, 100, msg.sender);
     }

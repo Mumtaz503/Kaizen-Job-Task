@@ -1,4 +1,4 @@
-const {network} = require("hardhat");
+const {network, ethers} = require("hardhat");
 const {developmentChains, pricePerNFT, tokenURI} = require("../helper-hardhat-config");
 const {verify} = require("../utils/verification");
 
@@ -9,7 +9,9 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     log("--------------------------------------------------------------");
     log("Deploying Task NFT please wait...")
 
-    const arguments = [pricePerNFT, tokenURI];
+    const tokenAddress = await ethers.getContract("TaskToken");
+
+    const arguments = [pricePerNFT, tokenURI, tokenAddress.target];
 
     const taskNft = await deploy("TaskNFT", {
         contract: "TaskNFT",
