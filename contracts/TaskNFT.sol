@@ -82,8 +82,10 @@ contract TaskNFT is ERC721A, Ownable {
             revert TaskNFT__NotOwner();
         }
 
+        uint256 erc1155TokenId = s_erc1155Task.getTokens();
+
         _burn(_tokenId);
-        s_erc1155Task.mint(address(this), 0, 100);
+        s_erc1155Task.mint(address(this), erc1155TokenId, 100);
         s_addressToBurnedNfts[msg.sender] += _tokenId;
 
         emit NftsBurned(_tokenId, 100, msg.sender);
